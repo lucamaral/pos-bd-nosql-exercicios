@@ -13,8 +13,9 @@ const RODADAS_ORDENADAS_KEY = "RODADAS_ORDENADAS_KEY"
 const TAMANHO_CARTELA = 15
 const BINGO = "BINGO"
 
+console.log(":::::::::::::BINGO:::::::::::::")
 subscribeVencedor()
-prepararRodada()
+prepararBingo()
 nova_rodada()
 
 function subscribeVencedor() {
@@ -23,15 +24,12 @@ function subscribeVencedor() {
         const userKey = `user:${userId}`
         client.hgetall(userKey, (erro, user) => {
             if (erro) throw erro
-            resultado.vencedor = user.name
             client.smembers(user.bcartela, (erro, cartela) => {
                 if (erro) throw erro
-                resultado.cartela = cartela
                 client.lrange(RODADAS_ORDENADAS_KEY, 0, -1, (erro, rodadas) => {
                     if (erro) throw erro
-                    resultado.rodadas = rodadas
-                    resultado.qtdRodadas = rodadas.length
-                    console.log(resultado)
+                    console.log("::: BINGO :::")
+                    console.log(`Usuário : ${user.name} | Cartela : (${cartela}) | Números Sorteados : (${rodadas})`)
                     subscriber.quit()
                     publisher.quit()
                     client.quit()
@@ -42,11 +40,10 @@ function subscribeVencedor() {
     subscriber.subscribe(BINGO)
 }
 
-function prepararRodada() {
+function prepararBingo() {
     for (let index = 1; index <= 99; index++) {
         client.sadd(NUMEROS_1_99_KEY, index)
     }
-
     for (let index = 1; index <= QTD_USUARIOS; index++) {
         const userKey = `user:${index}`
         const cartelaKey = `cartela:${index}`
@@ -57,6 +54,7 @@ function prepararRodada() {
         client.srandmember(NUMEROS_1_99_KEY, TAMANHO_CARTELA, (erro, cartela) => {
             if (erro) throw erro
             client.sadd(cartelaKey, cartela)
+            console.log(`Usuário ${index} | Cartela : (${cartela})`)
         })
     }
 }
@@ -69,6 +67,8 @@ function nova_rodada() {
             if (rodadaRepetida) {
                 nova_rodada()
             } else {
+                console.log(`:: NOVA RODADA ::`)
+                console.log(`- Número ${numero}`)
                 client.sadd(RODADAS_KEY, numero)
                 client.lpush(RODADAS_ORDENADAS_KEY, numero)
                 let userIdx = 1
@@ -89,6 +89,7 @@ function verificar_cartela(userIdx, numero) {
                     if (erro) throw erro
                     client.scard(`score:${userIdx}`, (err, score) => {
                         if (erro) throw erro
+                        console.log(`Usuário ${userIdx} | Score ${score}`)
                         if (score === TAMANHO_CARTELA) {
                             publisher.publish(BINGO, userIdx) // poderia ser uma chamada de função simples, fiz com eventos para testar...
                         } else {

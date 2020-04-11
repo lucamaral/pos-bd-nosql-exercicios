@@ -203,32 +203,61 @@ Analise um pouco a estrutura dos dados novamente e em seguida, responda as
 seguintes perguntas:
 1. Liste as ações com profit acima de 0.5 (limite a 10 o resultado)
 ```
-
+db.stocks.find({"Profit Margin" : {$gt : 0.5}}).limit(10)
 ```
 2. Liste as ações com perdas (limite a 10 novamente)
 ```
+db.stocks.find({'Profit Margin' : {'$lt' : 0}}).limit(10)
 ```   
 3. Liste as 10 ações mais rentáveis
 ```
+db.stocks.find().sort({'Profit Margin' : -1}).limit(10)
 ```   
 4. Qual foi o setor mais rentável?
 ```
+db.stocks.aggregate([
+{'$project' : {'Profit Margin' : 1, 'Sector' : 1}}, 
+{'$sort' : {'Profit Margin' : -1}},
+{'$limit' : 1}
+])
 ```   
 5. Ordene as ações pelo profit e usando um cursor, liste as ações.
 ```
+var cursor = db.stocks.find().sort({'Profit Margin' : -1}).limit(10)
+cursor.forEach(function (item){
+    print(item.Ticker)
+})
 ```   
 6. Renomeie o campo “Profit Margin” para apenas “profit”.
 ```
+db.stocks.update({}, {$rename : {'Profit Margin' : 'profit'}}, {multi : true})
 ```   
 7. Agora liste apenas a empresa e seu respectivo resultado
 ```
+db.stocks.aggregate([
+{'$project' : {'profit' : 1, 'Company' : 1}}, 
+{'$sort' : {'profit' : -1}},
+{'$limit' : 10}
+])
 ```   
 8. Analise as ações. É uma bola de cristal na sua mão... Quais as três ações
 você investiria?
 ```
+db.stocks.aggregate([
+{'$project' : {'profit' : 1, 'Company' : 1}}, 
+{'$sort' : {'profit' : -1}},
+{'$limit' : 3}
+])
 ```
 9. Liste as ações agrupadas por setor
 ```
+db.stocks.aggregate([
+{'$project' : {'Ticker' : 1, 'Sector' : 1}}, 
+{'$group' : {
+    _id : '$Sector', 
+    'tickers' : { '$push': "$Ticker" } 
+}}
+])
 ```
 
 ----
@@ -244,7 +273,16 @@ mongoimport --db stocks --collection stocks --file enron.json
 1. Liste as pessoas que enviaram e-mails (de forma distinta, ou seja, sem
 repetir). Quantas pessoas são?
 ```
+db.emails.aggregate([
+{$project: {
+         sender: 1
+}},
+{
+    $group : {_id : '$sender'}
+}
+])
 ```
 2. Contabilize quantos e-mails tem a palavra “fraud”
 ```
+db.emails.find({'text' : /fraud/})
 ```

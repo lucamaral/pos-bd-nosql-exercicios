@@ -1,3 +1,14 @@
+Para executar o bingo:
+- 
+
+- Baixar repositório
+- Instalar Redis e deixar ele executando
+- Rodar `npm install` no diretório `redis` do repositório
+- Executar `node bingo.js`
+
+Exemplo de saída do console:
+-
+
 ```
 :::::::::::::BINGO:::::::::::::                                                                                                                                                                                                              
 Usuário 1 | Cartela : (24,90,13,87,9,65,35,1,47,95,3,60,72,4,51)                                                                                                                                                                             
